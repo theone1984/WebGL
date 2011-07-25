@@ -9,15 +9,24 @@ function Initializer() {
 	    '../js/gl/geometry/arrayBasedGeometry.js',
 	    '../js/gl/geometry/objects/pyramidGeometry.js',
 	    '../js/gl/geometry/objects/cubeGeometry.js',
+	    '../js/gl/geometry/objects/coloredCubeGeometry.js',
+	    '../js/gl/geometry/objects/texturedCubeGeometry.js',
+	    '../js/gl/texture/texture.js',
 	    '../js/gl/matrix/matrixStack.js',
 	    '../js/gl/glBase.js',
-	    '../js/gl/shaderManager.js',
+	    '../js/gl/shader.js',
 	    '../js/main/glMain.js'
 	];
 	
-	this.dataToLoad = {
-		'fragmentShader':	'../shaders/fragment-shader.fp',
-	    'vertexShader': 	'../shaders/vertex-shader.vp'
+	this.textsToLoad = {
+		'colorFragmentShader':		'../shaders/color-fragment-shader.fp',
+	    'colorVertexShader': 		'../shaders/color-vertex-shader.vp',
+		'textureFragmentShader':	'../shaders/texture-fragment-shader.fp',
+	    'textureVertexShader':	 	'../shaders/texture-vertex-shader.vp',
+	};
+	
+	this.imagesToLoad = {
+		'boxTextureImage':			'../img/box.jpg',
 	};
 	
 	this.start = function() {
@@ -27,10 +36,20 @@ function Initializer() {
 	
 	this.scriptsLoaded = function() {
 		var that = this;
-		$.loadData(this.dataToLoad, function(data) { that.dataLoaded(data) });
+		$.loadTexts(this.textsToLoad, function(data) { that.textsLoaded(data) });
 	}
 	
-	this.dataLoaded = function(data) {
+	this.textsLoaded = function(textData) {
+		var that = this;
+		$.loadImages(this.imagesToLoad, function(imageData) { that.imagesLoaded(textData, imageData) });
+	}	
+	
+	this.imagesLoaded = function(textData, imageData) {
+		var data = {
+			'textData': textData,
+			'imageData': imageData
+		};
+		
 		this.startApplication(data);
 	}
 	

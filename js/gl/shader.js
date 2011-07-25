@@ -1,13 +1,13 @@
 
-function ShaderManager(glContext) {
+function Shader(glContext) {
 	this._glContext = glContext;
 	this._shaderProgram = null;
 	
-	this.createShadersFromHtmlElements = function(vertexShaderId, fragmentShaderId) {
+	this.createShaderFromHtmlElements = function(vertexShaderId, fragmentShaderId) {
 		var vertexShaderSource = this._getTextFromHtmlElement(vertexShaderId);
 		var fragmentShaderSource = this._getTextFromHtmlElement(fragmentShaderId);
 		
-		this.createShaders(vertexShaderSource, fragmentShaderSource);
+		this.createShader(vertexShaderSource, fragmentShaderSource);
 	}
 	
 	this._getTextFromHtmlElement = function(elementId) {
@@ -27,7 +27,7 @@ function ShaderManager(glContext) {
 	    return text;
 	}
 
-	this.createShaders = function(vertexShaderSource, fragmentShaderSource) {
+	this.createShader = function(vertexShaderSource, fragmentShaderSource) {
 		var vertexShader = this._getShader(vertexShaderSource, this._glContext.VERTEX_SHADER);
 		var fragmentShader = this._getShader(fragmentShaderSource, this._glContext.FRAGMENT_SHADER);
 		
@@ -41,7 +41,7 @@ function ShaderManager(glContext) {
 			throw "Could not initialize the shader program";
 		}
 		
-		this.useShader();
+		this.use();
 	}
 	
 	this._getShader = function(shaderSource, shaderType) {
@@ -65,7 +65,7 @@ function ShaderManager(glContext) {
 		this._glContext.enableVertexAttribArray(this._shaderProgram[attributeHandle]);
 	}
 	
-	this.useShader = function() {
+	this.use = function() {
 		this._glContext.useProgram(this._shaderProgram);
 	}
 	
@@ -75,6 +75,10 @@ function ShaderManager(glContext) {
 	
 	this.setUniformMatrix4 = function(attributeHandle, matrix) {
 		this._glContext.uniformMatrix4fv(this._shaderProgram[attributeHandle], false, new Float32Array(matrix));
+	}
+	
+	this.setUniform1i = function(attributeHandle, value) {
+		this._glContext.uniform1i(this._shaderProgram[attributeHandle], value);
 	}
 	
 	this.getShaderProgram = function() {

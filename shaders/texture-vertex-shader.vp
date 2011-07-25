@@ -1,0 +1,16 @@
+#ifdef GL_ES
+	precision highp float;
+#endif
+
+attribute vec3 vertexPosition;
+attribute vec2 vertexTextureCoordinate;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+varying vec2 textureCoordinate;
+
+void main(void) {
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);
+	textureCoordinate = vertexTextureCoordinate;
+}

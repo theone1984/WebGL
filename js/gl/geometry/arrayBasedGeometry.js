@@ -4,9 +4,15 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	this._primitiveType = primitiveType;
 	
 	this._vertexPositionBuffer = null;	
-	this._colorBuffer = null;
-	this._indexBuffer = null;
+	this._vertexPositionUniformHandle = null;
 	
+	this._colorBuffer = null;
+	this._colorUniformHandle = null;
+	
+	this._textureCoordinateBuffers = [];
+	this._textureCoordinateUniformHandles = [];
+	
+	this._indexBuffer = null;	
 	this._indexed = false;
 	
 	this._unpack = function(colors, unpackCount) {
@@ -28,11 +34,32 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 		this._setArrayBufferData(this._vertexPositionBuffer, vertexData, 3);
 	}
 	
+	this.bindVertexPositionUniformHandle = function(vertexPositionUniformHandle) {
+		this._vertexPositionUniformHandle = vertexPositionUniformHandle;
+	}
+	
 	this.setColorData = function(colorData) {
 		if (this._colorBuffer == null)
 			this._colorBuffer = this._glContext.createBuffer();
 		
 		this._setArrayBufferData(this._colorBuffer, colorData, 4);
+	}
+	
+	this.bindColorUniformHandle = function(colorUniformHandle) {
+		this._colorUniformHandle = colorUniformHandle;
+	}
+	
+	this.set2DTextureCoordinateData = function(textureLevel, textureCoordinateData) {
+		if (this._textureCoordinateBuffers[textureLevel] == undefined ||
+			this._textureCoordinateBuffers[textureLevel] == null) {
+			this._textureCoordinateBuffers[textureLevel] = this._glContext.createBuffer();
+		}
+		
+		this._setArrayBufferData(this._textureCoordinateBuffers[textureLevel], textureCoordinateData, 2);
+	}
+	
+	this.bindTextureCoordinateUniformHandle = function(textureLevel, textureCoordinateUniformHandle) {
+		this._textureCoordinateUniformHandles[textureLevel] = textureCoordinateUniformHandle;
 	}
 	
 	this.setIndexData = function(indexData) {
@@ -42,7 +69,7 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 		}
 		
 		this._setIndexBufferData(this._indexBuffer, indexData);
-	}	
+	}
 	
 	this._setIndexBufferData = function(buffer, data) {
 		this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, buffer);
@@ -60,30 +87,38 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 		buffer.numItems = data.length / itemSize;			
 	}
 	
-	this._bindGeometry = function(shaderProgram, vertexPositionAttribute, colorAttribute) {
-		if (this._vertexPositionBuffer != null) {
-			this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._vertexPositionBuffer);
-			this._glContext.vertexAttribPointer(shaderProgram[vertexPositionAttribute], this._vertexPositionBuffer.itemSize, this._glContext.FLOAT, false, 0, 0);
-		}		
+	this._bindGeometry = function(shaderProgram, vertexPositionAttribute, colorAttribute, textureCoordinateAttributes) {
+	
+		this._bindFloatBuffer(shaderProgram, this._vertexPositionBuffer, this._vertexPositionUniformHandle);
+		this._bindFloatBuffer(shaderProgram, this._colorBuffer, this._colorUniformHandle);
 		
-		if (this._colorBuffer != null) {
-			this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._colorBuffer);
-			this._glContext.vertexAttribPointer(shaderProgram[colorAttribute], this._colorBuffer.itemSize, this._glContext.FLOAT, false, 0, 0);
-		} else {
-			
+		for (textureLevel in this._textureCoordinateBuffers) {
+			if (this._textureCoordinateUniformHandles[textureLevel] != undefined && this._textureCoordinateUniformHandles[textureLevel] != null) {
+				this._bindFloatBuffer(shaderProgram, this._textureCoordinateBuffers[textureLevel], this._textureCoordinateUniformHandles[textureLevel]);
+			}
 		}
-		
-		if (this._indexBuffer != null) {
+
+		this._bindIndexBuffer(shaderProgram);
+	}
+	
+	this._bindFloatBuffer = function(shaderProgram, buffer, attributeName) {
+		if (buffer != null && attributeName != null) {
+			this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, buffer);
+			this._glContext.vertexAttribPointer(shaderProgram[attributeName], buffer.itemSize, this._glContext.FLOAT, false, 0, 0);
+		}
+	}
+	
+	this._bindIndexBuffer = function(shaderProgram) {
+		if (this._indexed && this._indexBuffer != null) {
 			this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._indexBuffer);			
 		}
 	}
 	
-	this.drawOnce = function(shaderProgram, vertexPositionAttribute, colorAttribute) {
+	this.drawOnce = function(shaderProgram) {
 		this._glContext.useProgram(shaderProgram);
 		
-		this._bindGeometry(shaderProgram, vertexPositionAttribute, colorAttribute);
+		this._bindGeometry(shaderProgram);
 		
-
 		if (!this._indexed) {
 			this._glContext.drawArrays(this._primitiveType, 0, this._vertexPositionBuffer.numItems);
 		} else {

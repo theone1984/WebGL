@@ -1,5 +1,5 @@
 
-function CubeGeometry(glContext, sideLength, sideColors) {
+function CubeGeometry(glContext, sideLength) {
 	ArrayBasedGeometry.apply(this, [ glContext, glContext.TRIANGLES ]);
 	
 	var nValue = -sideLength / 2.0;
@@ -71,10 +71,7 @@ function CubeGeometry(glContext, sideLength, sideColors) {
 	
 	// Constructor
 	{
-		var unpackedColors = this._unpack(sideColors, 4);
-		
 		this.setVertexPositionData(vertexPositions);
-		this.setColorData(unpackedColors);		
 		this.setIndexData(indexData);
 	}
 }

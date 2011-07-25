@@ -23,22 +23,33 @@
 			},
 			error: function(request, statusText, error) {
 				if (error != 'Not Found') {
-					var message = error.message + " in '" + scriptUrl + "'";
+					var message = error.message + " in '" + scriptUrls[currentIndex] + "'";
 					throw new Error(message);
 				}
 			}
 		});
 	}
 	
+	$.loadData = {
+		getElementCount: function(hashMap) {
+			var elementCount = 0;		
+			for (var element in hashMap)
+				elementCount++;
+			
+			return elementCount;
+		}
+	} 
+	
 	/**
 	 * Loads data in parallel
 	 */
-	$.loadData = function(dataUrls, successCallback) {
-		var resultingData = new Array();
+	$.loadTexts = function(dataUrls, successCallback) {
+		var resultingData = new Array();		
+		var dataCountToLoad = $.loadData.getElementCount(dataUrls);
 		
-		var dataCountToLoad = 0;		
-		for (var dataName in dataUrls)
-			dataCountToLoad++;
+		if (dataCountToLoad == 0) {
+			successCallback.call($, resultingData);
+		}
 		
 		for (var dataName in dataUrls) {
 			var dataUrl = dataUrls[dataName];
@@ -57,7 +68,42 @@
 				});
 			}
 			
+
 			loaderFunction.call($, dataName, dataUrl);
 		}
 	}
+	
+	$.loadImages = function(dataUrls, successCallback) {
+		var resultingData = new Array();		
+		var dataCountToLoad = $.loadData.getElementCount(dataUrls);
+		
+		if (dataCountToLoad == 0) {
+			successCallback.call($, resultingData);
+		}
+		
+		for (var dataName in dataUrls) {
+			var dataUrl = dataUrls[dataName];
+			
+			var loaderFunction = function(dataName, dataUrl) {
+				var image = new Image();
+				image.onload = function() {
+					dataCountToLoad--;		
+					resultingData[dataName] = image;
+					
+					if (dataCountToLoad == 0) {
+						successCallback.call($, resultingData);
+					}					
+				}
+				image.onerror = function(exception) {
+					throw new Error("Error retrieving image '" + dataName + "' at location '" + dataUrl + "': " + exception);
+				}
+				
+				image.src = dataUrl;
+			}			
+			
+			loaderFunction.call($, dataName, dataUrl);			
+		}		
+	}
+	
+	
 }) (jQuery);

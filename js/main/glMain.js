@@ -1,26 +1,28 @@
 
 function GlMain(data) {
-	this.data = [];
+	this.textData = [];
+	this.imageData = [];
 	
 	this.gl = null;
 	this.glBase = null;
-	this.shaderManager = null;
+	
+	this.colorShader = null;
+	this.textureShader = null;
 
 	this.matrixStack = null;
 
 	this.pyramidGeometry = null;
 	this.cubeGeometry = null;
+	this.cubeTexture = null;
+	
 	this.currentRotation = 0;
 	
 	this.animationTimer = null;
 	
 	// Constructor
 	{
-		this.data = data;
-		
-		if (this.data['fragmentShader'] == undefined || this.data['vertexShader'] == undefined) {
-			throw new Error('Vertex and fragment shader must be given');
-		}
+		this.textData = data.textData;
+		this.imageData = data.imageData;
 	}
 	
 	this.start = function() {
@@ -29,6 +31,8 @@ function GlMain(data) {
 		this.initGl(canvas);
 		this.initShaders();
 		this.initGeometry();
+		this.initTextures();
+		
 	    this.matrixStack = new MatrixStack();
 
 	    this.startDrawLoop();	    
@@ -42,14 +46,31 @@ function GlMain(data) {
 	}
 	
 	this.initShaders = function() {
-		this.shaderManager = new ShaderManager(this.gl);
-		this.shaderManager.createShaders(this.data['vertexShader'], this.data['fragmentShader']);
+		this.createColorShader();
+		this.createTextureShader();
+	}
+	
+	this.createColorShader = function() {
+		this.colorShader = new Shader(this.gl);
+		this.colorShader.createShader(this.textData.colorVertexShader, this.textData.colorFragmentShader);
 			
-		this.shaderManager.bindVertexAttribute('vertexPosition', 'vertexPositionAttribute');
-		this.shaderManager.bindVertexAttribute('vertexColor', 'vertexColorAttribute');
+		this.colorShader.bindVertexAttribute('vertexPosition', 'vertexPositionAttribute');
+		this.colorShader.bindVertexAttribute('vertexColor', 'vertexColorAttribute');
 			
-		this.shaderManager.bindUniformAttribute('modelViewMatrix', 'modelViewMatrixUniform');
-		this.shaderManager.bindUniformAttribute('projectionMatrix', 'projectionMatrixUniform');
+		this.colorShader.bindUniformAttribute('modelViewMatrix', 'modelViewMatrixUniform');
+		this.colorShader.bindUniformAttribute('projectionMatrix', 'projectionMatrixUniform');
+	}
+	
+	this.createTextureShader = function() {
+		this.textureShader = new Shader(this.gl);
+		this.textureShader.createShader(this.textData.textureVertexShader, this.textData.textureFragmentShader);
+			
+		this.textureShader.bindVertexAttribute('vertexPosition', 'vertexPositionAttribute');
+		this.textureShader.bindVertexAttribute('vertexTextureCoordinate', 'vertexTextureCoordinateAttribute');
+			
+		this.textureShader.bindUniformAttribute('modelViewMatrix', 'modelViewMatrixUniform');
+		this.textureShader.bindUniformAttribute('projectionMatrix', 'projectionMatrixUniform');
+		this.textureShader.bindUniformAttribute('textureSampler', 'textureSamplerUniform');
 	}
 	
 	this.initGeometry = function() {
@@ -60,14 +81,18 @@ function GlMain(data) {
 	        [ 0.5, 0.5, 0.5, 1.0 ]	// Left face
 		]);
 		
-		this.cubeGeometry = new CubeGeometry(this.gl, 1.0, [
-       	    [1.0, 0.0, 0.0, 1.0], // Front face color
-       	    [1.0, 1.0, 0.0, 1.0], // Back face color
-			[0.0, 1.0, 0.0, 1.0], // Top face color
-			[1.0, 0.5, 0.5, 1.0], // Bottom face color
-			[1.0, 0.0, 1.0, 1.0], // Right face color
-			[0.0, 0.0, 1.0, 1.0]  // Left face color
-		]);
+		this.pyramidGeometry.bindVertexPositionUniformHandle('vertexPositionAttribute');
+		this.pyramidGeometry.bindColorUniformHandle('vertexColorAttribute');
+		
+		this.cubeGeometry = new TexturedCubeGeometry(this.gl, 1.0);
+		
+		this.cubeGeometry.bindVertexPositionUniformHandle('vertexPositionAttribute');
+		this.cubeGeometry.bindTextureCoordinateUniformHandle(0, 'vertexTextureCoordinateAttribute');
+	}
+	
+	this.initTextures = function() {
+		this.cubeTexture = new Texture(this.gl);
+		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR, this.gl.LINEAR);
 	}
 	
 	this.startAnimationTimer = function() {
@@ -100,9 +125,9 @@ function GlMain(data) {
 			this.matrixStack.pushMatrix();
 			
 				this.matrixStack.rotate(this.currentRotation, 0.0, 1.0, 0.0);	
-				this.setMatrixUniforms();
+				this.prepareColoredDraw();
 				
-				this.pyramidGeometry.drawOnce(this.shaderManager.getShaderProgram(), 'vertexPositionAttribute', 'vertexColorAttribute');
+				this.pyramidGeometry.drawOnce(this.colorShader.getShaderProgram());
 				
 			this.matrixStack.popMatrix();
 			
@@ -110,9 +135,9 @@ function GlMain(data) {
 			
 			this.matrixStack.pushMatrix();
 				this.matrixStack.rotate(this.currentRotation, 1.0, 1.0, 1.0);
-				this.setMatrixUniforms();
+				this.prepareTexturedDraw();
 				
-				this.cubeGeometry.drawOnce(this.shaderManager.getShaderProgram(), 'vertexPositionAttribute', 'vertexColorAttribute');
+				this.cubeGeometry.drawOnce(this.textureShader.getShaderProgram());
 			
 			this.matrixStack.popMatrix();
 		this.matrixStack.popMatrix();
@@ -120,8 +145,18 @@ function GlMain(data) {
 		//throw("done");
 	}
 	
-	this.setMatrixUniforms = function() {
-		this.shaderManager.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.getProjectionMatrix());
-		this.shaderManager.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.getModelViewMatrix());
+	this.prepareColoredDraw = function() {
+		this.colorShader.use();
+		this.colorShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.getProjectionMatrix());
+		this.colorShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.getModelViewMatrix());
+	}
+	
+	this.prepareTexturedDraw = function() {
+		this.textureShader.use();
+		this.textureShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.getProjectionMatrix());
+		this.textureShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.getModelViewMatrix());
+		this.textureShader.setUniform1i('textureSamplerUniform', 0);
+		
+		this.cubeTexture.use();
 	}	
 }
