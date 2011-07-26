@@ -10,6 +10,7 @@ function GlMain(data) {
 	this.textureShader = null;
 
 	this.matrixStack = null;
+	this.camera = null;
 
 	this.pyramidGeometry = null;
 	this.cubeGeometry = null;
@@ -34,6 +35,7 @@ function GlMain(data) {
 		this.initTextures();
 		
 	    this.matrixStack = new MatrixStack();
+		this.initCamera();
 
 	    this.startDrawLoop();	    
 	    this.startAnimationTimer();
@@ -95,6 +97,11 @@ function GlMain(data) {
 		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR, this.gl.LINEAR);
 	}
 	
+	this.initCamera = function() {
+		this.camera = new UserMovedCamera(this.matrixStack.modelViewMatrix, 'webgl-canvas');
+		this.camera.bindMouseMovement();
+	}
+	
 	this.startAnimationTimer = function() {
 		var that = this;
 		
@@ -116,45 +123,45 @@ function GlMain(data) {
 		this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		
-		this.matrixStack.setPerspectiveProjection(45, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0);
+		this.matrixStack.projectionMatrix.setPerspectiveProjection(45, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0);
 		
-		this.matrixStack.pushMatrix();
+		this.matrixStack.modelViewMatrix.pushMatrix();
 		
-			this.matrixStack.translate(-1.5, 0.0, -7.0);
+			this.matrixStack.modelViewMatrix.translate(-1.5, 0.0, -7.0);
 			
-			this.matrixStack.pushMatrix();
+			this.matrixStack.modelViewMatrix.pushMatrix();
 			
-				this.matrixStack.rotate(this.currentRotation, 0.0, 1.0, 0.0);	
+				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 0.0, 1.0, 0.0);	
 				this.prepareColoredDraw();
 				
 				this.pyramidGeometry.drawOnce(this.colorShader.getShaderProgram());
 				
-			this.matrixStack.popMatrix();
+			this.matrixStack.modelViewMatrix.popMatrix();
 			
-			this.matrixStack.translate(2.5, 0.0, 0.0);
+			this.matrixStack.modelViewMatrix.translate(2.5, 0.0, 0.0);
 			
-			this.matrixStack.pushMatrix();
-				this.matrixStack.rotate(this.currentRotation, 1.0, 1.0, 1.0);
+			this.matrixStack.modelViewMatrix.pushMatrix();
+				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 1.0, 1.0, 1.0);
 				this.prepareTexturedDraw();
 				
 				this.cubeGeometry.drawOnce(this.textureShader.getShaderProgram());
 			
-			this.matrixStack.popMatrix();
-		this.matrixStack.popMatrix();
+			this.matrixStack.modelViewMatrix.popMatrix();
+		this.matrixStack.modelViewMatrix.popMatrix();
 		
 		//throw("done");
 	}
 	
 	this.prepareColoredDraw = function() {
 		this.colorShader.use();
-		this.colorShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.getProjectionMatrix());
-		this.colorShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.getModelViewMatrix());
+		this.colorShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.projectionMatrix.getMatrix());
+		this.colorShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.modelViewMatrix.getMatrix());
 	}
 	
 	this.prepareTexturedDraw = function() {
 		this.textureShader.use();
-		this.textureShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.getProjectionMatrix());
-		this.textureShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.getModelViewMatrix());
+		this.textureShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.projectionMatrix.getMatrix());
+		this.textureShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.modelViewMatrix.getMatrix());
 		this.textureShader.setUniform1i('textureSamplerUniform', 0);
 		
 		this.cubeTexture.use();
