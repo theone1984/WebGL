@@ -73,12 +73,20 @@ function Shader(glContext) {
 		this._shaderProgram[attributeHandle] = this._glContext.getUniformLocation(this._shaderProgram, uniformAttributeName);
 	}
 	
+	this.setUniformMatrix3 = function(attributeHandle, matrix) {
+		this._glContext.uniformMatrix3fv(this._shaderProgram[attributeHandle], false, new Float32Array(matrix));
+	}
+	
 	this.setUniformMatrix4 = function(attributeHandle, matrix) {
 		this._glContext.uniformMatrix4fv(this._shaderProgram[attributeHandle], false, new Float32Array(matrix));
 	}
 	
 	this.setUniform1i = function(attributeHandle, value) {
 		this._glContext.uniform1i(this._shaderProgram[attributeHandle], value);
+	}
+	
+	this.setUniform3f = function(attributeHandle, x, y, z) {
+		this._glContext.uniform3f(this._shaderProgram[attributeHandle], x, y, z);
 	}
 	
 	this.getShaderProgram = function() {

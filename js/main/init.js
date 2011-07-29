@@ -3,7 +3,7 @@ var init = new Initializer();
 
 function Initializer() {
 	this.scriptsToLoad = [
-	    '../js/lib/gl/glMatrix.min.js',
+	    '../js/lib/gl/glMatrix.js',
 	    '../js/lib/gl/webgl-utils.js',
 	    '../js/utility/timer.js',
 	    '../js/gl/geometry/arrayBasedGeometry.js',
@@ -11,6 +11,7 @@ function Initializer() {
 	    '../js/gl/geometry/objects/cubeGeometry.js',
 	    '../js/gl/geometry/objects/coloredCubeGeometry.js',
 	    '../js/gl/geometry/objects/texturedCubeGeometry.js',
+	    '../js/gl/geometry/objects/sphereGeometry.js',
 	    '../js/gl/texture/texture.js',
 	    '../js/gl/matrix/modelViewMatrix.js',
 	    '../js/gl/camera/userMovedCamera.js',

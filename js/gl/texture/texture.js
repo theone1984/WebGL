@@ -15,6 +15,11 @@ this.Texture = function(glContext) {
 	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, magnificationFilterMode);
 	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minificationFilterMode);
 	    
+	    if (minificationFilterMode == gl.NEAREST_MIPMAP_NEAREST || minificationFilterMode == gl.LINEAR_MIPMAP_NEAREST ||
+	    	minificationFilterMode == gl.NEAREST_MIPMAP_LINEAR || minificationFilterMode == gl.LINEAR_MIPMAP_LINEAR) {
+	    	gl.generateMipmap(gl.TEXTURE_2D);
+	    }
+	    
 	    gl.bindTexture(gl.TEXTURE_2D, null);
 	    
 	    this._textureHandle = textureHandle;

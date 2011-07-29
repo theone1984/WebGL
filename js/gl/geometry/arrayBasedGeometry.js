@@ -6,6 +6,9 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	this._vertexPositionBuffer = null;	
 	this._vertexPositionUniformHandle = null;
 	
+	this._normalBuffer = null;
+	this._normalUniformHandle = null;
+	
 	this._colorBuffer = null;
 	this._colorUniformHandle = null;
 	
@@ -36,6 +39,17 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	
 	this.bindVertexPositionUniformHandle = function(vertexPositionUniformHandle) {
 		this._vertexPositionUniformHandle = vertexPositionUniformHandle;
+	}
+	
+	this.setNormalData = function(normalData) {
+		if (this._normalBuffer == null)
+			this._normalBuffer = this._glContext.createBuffer();
+		
+		this._setArrayBufferData(this._normalBuffer, normalData, 3);
+	}
+	
+	this.bindNormalUniformHandle = function(normalUniformHandle) {
+		this._normalUniformHandle = normalUniformHandle;
 	}
 	
 	this.setColorData = function(colorData) {
@@ -91,6 +105,7 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	
 		this._bindFloatBuffer(shaderProgram, this._vertexPositionBuffer, this._vertexPositionUniformHandle);
 		this._bindFloatBuffer(shaderProgram, this._colorBuffer, this._colorUniformHandle);
+		this._bindFloatBuffer(shaderProgram, this._normalBuffer, this._normalUniformHandle);
 		
 		for (textureLevel in this._textureCoordinateBuffers) {
 			if (this._textureCoordinateUniformHandles[textureLevel] != undefined && this._textureCoordinateUniformHandles[textureLevel] != null) {

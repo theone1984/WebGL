@@ -3,12 +3,21 @@ function ModelViewMatrix() {
 	this._modelMatrixStack = [];
 	this._modelNormalMatrixStack = [];
 	
-	this._modelNormalMatrix = mat4.create();
-	
 	this._modelMatrix = mat4.create();
 	this._viewMatrix = mat4.create();
 	
+	this._modelNormalMatrix = mat4.create();
+	this._viewNormalMatrix = mat4.create();
+	
 	this.lookAt = function(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
+		var rotationMatrix = this._getLookatRotationMatrix(ex, ey, ez, cx, cy, cz, ux, uy, uz)
+		var translationMatrix = this._getTranslationRotationMatrix(ex, ey, ez);
+		
+		this._viewNormalMatrix = rotationMatrix;
+		mat4.multiply(rotationMatrix, translationMatrix, this._viewMatrix);
+	}
+	
+	this._getLookatRotationMatrix = function(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
 		var eye = vec3.create([ex, ey, ez]);
 		var center = vec3.create([cx, cy, cz]);
 		var up = vec3.create([ux, uy, uz]);
@@ -24,10 +33,13 @@ function ModelViewMatrix() {
 		vec3.cross(side, forward, up);
 		vec3.normalize(up);
 		
-		var m = mat4.create([side[0], up[0], -forward[0], 0, side[1], up[1], -forward[1], 0, side[2], up[2], -forward[2], 0, 0, 0, 0, 1]);
-		var t = mat4.create([1, 0, 0, -ex, 0, 1, 0, -ey, 0, 0, 1, -ez, 0, 0, 0, 1]);
-		
-		mat4.multiply(m, t, this._viewMatrix);
+		var rotationMatrix = mat4.create([side[0], up[0], -forward[0], 0, side[1], up[1], -forward[1], 0, side[2], up[2], -forward[2], 0, 0, 0, 0, 1]);
+		return rotationMatrix;
+	}
+	
+	this._getTranslationRotationMatrix = function(ex, ey, ez) {
+		var translationMatrix = mat4.create([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -ex, -ey, -ez, 1]);
+		return translationMatrix;
 	}
 	
 	this.pushMatrix = function() {
@@ -80,7 +92,13 @@ function ModelViewMatrix() {
 	}
 	
 	this.getNormalMatrix = function() {
-		return this._modelNormalMatrix;
+		var normalMatrix4 = mat4.create();
+		mat4.multiply(this._viewNormalMatrix, this._modelNormalMatrix, normalMatrix4);
+		
+		var normalMatrix = mat3.create();
+		mat4.toMat3(normalMatrix4, normalMatrix);
+		
+		return normalMatrix;
 	}
 	
 	// Constructor
