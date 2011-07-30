@@ -91,6 +91,15 @@ function ModelViewMatrix() {
 		return modelViewMatrix;
 	}
 	
+	this.getInverseMatrix = function() {
+		var modelViewMatrix = this.getMatrix();
+		
+		var inverseModelViewMatrix = mat4.create();
+		mat4.inverse(modelViewMatrix, inverseModelViewMatrix);
+		
+		return inverseModelViewMatrix;
+	}
+	
 	this.getNormalMatrix = function() {
 		var normalMatrix4 = mat4.create();
 		mat4.multiply(this._viewNormalMatrix, this._modelNormalMatrix, normalMatrix4);

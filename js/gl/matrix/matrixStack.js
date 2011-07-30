@@ -11,11 +11,12 @@ function MatrixStack() {
 		this.projectionMatrix = new ProjectionMatrix();		
 	}
 	
-	this.bindShaderAttributes = function(shader, projectionMatrixUniform, modelViewMatrixUniform, normalMatrixUniform) {
+	this.bindShaderAttributes = function(shader, projectionMatrixUniform, modelViewMatrixUniform, normalMatrixUniform, inverseModelViewMatrixUniform) {
 		this._addShaderHandles(shader, {
 			projectionMatrix: shader.getUniformHandle(projectionMatrixUniform),
 			modelViewMatrix: shader.getUniformHandle(modelViewMatrixUniform),
-			normalMatrix: shader.getUniformHandle(normalMatrixUniform)
+			normalMatrix: shader.getUniformHandle(normalMatrixUniform),
+			inverseModelViewMatrix: shader.getUniformHandle(inverseModelViewMatrixUniform)
 		});
 	}
 	
@@ -28,5 +29,7 @@ function MatrixStack() {
 			activeShader.setUniformMatrix4(shaderHandles.modelViewMatrix, this.modelViewMatrix.getMatrix());
 		if (shaderHandles.normalMatrix != null)
 			activeShader.setUniformMatrix3(shaderHandles.normalMatrix, this.modelViewMatrix.getNormalMatrix());
+		if (shaderHandles.inverseModelViewMatrix != null)
+			activeShader.setUniformMatrix4(shaderHandles.inverseModelViewMatrix, this.modelViewMatrix.getInverseMatrix());
 	}
 }

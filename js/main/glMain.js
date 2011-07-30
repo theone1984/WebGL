@@ -17,7 +17,9 @@ function GlMain(data) {
 	this.lightGeometry = null;
 	this.lightPosition = null;	
 	this.objectGeometry = null;
+	
 	this.cubeTexture = null;
+	this.normalTexture = null;
 	
 	this.currentRotation = 0;
 	
@@ -70,22 +72,26 @@ function GlMain(data) {
 	        [ 1.0, 1.0, 1.0, 1.0 ],
 	        [ 1.0, 1.0, 1.0, 1.0 ]
 		]);
-		this.lightGeometry.bindShaderAttributes(this.colorShader, 'vertexPosition', null, 'vertexColor', null);
+		this.lightGeometry.bindShaderAttributes(this.colorShader, 'vertexPosition', null, null, 'vertexColor', null);
 		
 		this.objectGeometry = new SphereGeometry(this.gl, 1.0, 40, 40);
-		this.objectGeometry.bindShaderAttributes(this.textureShader, 'vertexPosition', 'vertexNormal', 'vertexColor', ['vertexTextureCoordinate']);
+		this.objectGeometry.bindShaderAttributes(this.textureShader, 'vertexPosition', 'vertexNormal', 'vertexTangent', 'vertexColor', ['vertexTextureCoordinate']);
 	}
 	
 	this.initTextures = function() {
 		this.cubeTexture = new Texture(this.gl);
 		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
 		this.cubeTexture.bindShaderAttributes(this.textureShader, 'textureSampler');
+		
+		this.normalTexture = new Texture(this.gl);
+		this.normalTexture.create2DTexture(this.imageData.normalTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
+		this.normalTexture.bindShaderAttributes(this.textureShader, 'normalSampler');
 	}
 	
 	this.initMatrixStack = function() {
 	    this.matrixStack = new MatrixStack();
-	    this.matrixStack.bindShaderAttributes(this.colorShader, 'projectionMatrix', 'modelViewMatrix', null);
-	    this.matrixStack.bindShaderAttributes(this.textureShader, 'projectionMatrix', 'modelViewMatrix', 'normalMatrix');
+	    this.matrixStack.bindShaderAttributes(this.colorShader, 'projectionMatrix', 'modelViewMatrix', null, null);
+	    this.matrixStack.bindShaderAttributes(this.textureShader, 'projectionMatrix', 'modelViewMatrix', 'normalMatrix', 'inverseModelViewMatrix');
 	}
 	
 	this.initCamera = function() {
@@ -166,5 +172,6 @@ function GlMain(data) {
 		this.matrixStack.setShaderAttributes(shader);
 		this.lightSource.setShaderLightPosition(shader);
 		this.cubeTexture.use(shader, 0);
+		this.normalTexture.use(shader, 1);
 	}	
 }

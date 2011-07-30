@@ -5,7 +5,8 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	this._glContext = glContext;
 	this._primitiveType = primitiveType;
 	
-	this._vertexPositionBuffer = null;	
+	this._vertexPositionBuffer = null;
+	this._tangentBuffer = null;	
 	this._normalBuffer = null;
 	this._colorBuffer = null;
 	this._textureCoordinateBuffers = [];
@@ -13,10 +14,11 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 	this._indexBuffer = null;	
 	this._indexed = false;
 	
-	this.bindShaderAttributes = function(shader, vertexPositionAttribute, normalAttribute, colorAttribute, textureCoordinateAttributes) {
+	this.bindShaderAttributes = function(shader, vertexPositionAttribute, normalAttribute, tangentAttribute, colorAttribute, textureCoordinateAttributes) {
 		this._addShaderHandles(shader, {
 			vertexPosition: shader.getVertexAttributeHandle(vertexPositionAttribute),
 			normal: shader.getVertexAttributeHandle(normalAttribute),
+			tangent: shader.getVertexAttributeHandle(tangentAttribute),
 			color: shader.getVertexAttributeHandle(colorAttribute),
 			textureCoordinates: shader.getVertexAttributeHandles(textureCoordinateAttributes)
 		});
@@ -34,6 +36,13 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 			this._normalBuffer = this._glContext.createBuffer();
 		
 		this._setArrayBufferData(this._normalBuffer, normalData, 3);
+	}
+	
+	this.setTangentData = function(tangentData) {
+		if (this._tangentBuffer == null)
+			this._tangentBuffer = this._glContext.createBuffer();
+		
+		this._setArrayBufferData(this._tangentBuffer, tangentData, 3);
 	}
 	
 	this.setColorData = function(colorData) {
@@ -110,6 +119,7 @@ function ArrayBasedGeometry(glContext, primitiveType) {
 		this._bindFloatBuffer(this._vertexPositionBuffer, shaderHandles.vertexPosition);
 		this._bindFloatBuffer(this._colorBuffer, shaderHandles.color);
 		this._bindFloatBuffer(this._normalBuffer, shaderHandles.normal);
+		this._bindFloatBuffer(this._tangentBuffer, shaderHandles.tangent);
 		
 		for (textureLevel in this._textureCoordinateBuffers) {
 			var texCoordBuffer = this._textureCoordinateBuffers[textureLevel];

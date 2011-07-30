@@ -33,6 +33,7 @@ function Initializer() {
 	
 	this.imagesToLoad = {
 		'boxTextureImage':			'../img/box.jpg',
+		'normalTextureImage':		'../img/normal.jpg'
 	};
 	
 	this.start = function() {

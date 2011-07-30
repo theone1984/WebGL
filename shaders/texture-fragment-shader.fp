@@ -3,6 +3,7 @@
 #endif
 
 uniform sampler2D textureSampler;
+uniform sampler2D normalSampler;
 
 uniform vec3 lightColor;
 uniform float ambientFactor;
@@ -33,4 +34,6 @@ void main(void) {
 	}
 
 	gl_FragColor = vec4(resultingColor.rgb, textureColor.a);
+	
+	
 }
