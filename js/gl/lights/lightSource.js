@@ -28,7 +28,7 @@ function LightSource(modelViewMatrix, color, ambientFactor, diffuseFactor, specu
 		
 		if (shaderHandles.lightColor != null)
 			activeShader.setUniform3f(shaderHandles.lightColor, this._color);
-		
+
 		if (shaderHandles.ambientFactor != null)
 			activeShader.setUniform1f(shaderHandles.ambientFactor, this._ambientFactor);
 		if (shaderHandles.diffuseFactor != null)

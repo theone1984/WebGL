@@ -6,7 +6,7 @@ uniform sampler2D textureSampler;
 
 uniform vec3 lightColor;
 uniform float ambientFactor;
-uniform float diffueseFactor;
+uniform float diffuseFactor;
 uniform float specularFactor;
 
 varying vec2 textureCoordinate;
@@ -17,28 +17,20 @@ void main(void) {
 	vec3 normalizedNormal = normalize(normal);
 	vec3 normalizedLightDirection = normalize(lightDirection);
 	
-	vec3 ambientColor = vec3(0.2, 0.2, 0.2);
-	vec3 diffuseColor = vec3(0.5, 0.5, 0.5);
-	vec3 specularColor = vec3(1.0, 1.0, 1.0);
+	float diffuseIntensity = max(0.0, (dot(normalizedLightDirection, normalizedNormal)));
+	vec3 resultingLightColor = ambientFactor * lightColor + diffuseIntensity * diffuseFactor * lightColor;
 	
-	//gl_FragColor = ;
-	//gl_FragColor = vec4(textureCoordinate.s, textureCoordinate.t, 1.0, 1.0);
-	//gl_FragColor = vec4(1.0);
-	//gl_FragColor = vec4(normalizedNormal.xyz, 1.0);
-	
-	float diffuseFactor = max(0.0, (dot(normalizedLightDirection, normalizedNormal)));
-
-	vec3 lightColor = ambientColor + diffuseFactor * diffuseColor;
-
-	vec3 reflectedVector =  normalize(reflect(-normalizedLightDirection, normalizedNormal));
-	float specularFactor = max(0.0, dot(reflectedVector, normalizedNormal));
-
-	if (diffuseFactor != 0.0) {
-		specularFactor = pow(specularFactor, 128.0);
-		lightColor += specularColor * specularFactor;
-	}
-
 	vec4 textureColor = texture2D(textureSampler, textureCoordinate);
 	
-	gl_FragColor = vec4(lightColor.rgb * textureColor.rgb, textureColor.a);
+	vec3 resultingColor = resultingLightColor * textureColor.rgb;
+
+	vec3 reflectedVector =  normalize(reflect(-normalizedLightDirection, normalizedNormal));
+	float specularIntensity = max(0.0, dot(reflectedVector, normalizedNormal));
+
+	if (diffuseIntensity != 0.0) {
+		specularIntensity = pow(specularIntensity, 100.0);
+		resultingColor += specularIntensity * specularFactor * lightColor;
+	}
+
+	gl_FragColor = vec4(resultingColor.rgb, textureColor.a);
 }

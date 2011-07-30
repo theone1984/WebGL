@@ -43,8 +43,6 @@ function GlMain(data) {
 
 		this.initLights();
 		
-
-
 	    this.startDrawLoop();	    
 	    this.startAnimationTimer();
 	}
@@ -98,7 +96,7 @@ function GlMain(data) {
 	this.initLights = function() {
 		this.lightPosition = vec3.create([1.0, 1.0, 1.0]);
 		
-		this.lightSource = new LightSource(this.matrixStack.modelViewMatrix, [1.0, 1.0, 1.0], 0.1, 0.5, 1.0);		
+		this.lightSource = new LightSource(this.matrixStack.modelViewMatrix, [1.0, 1.0, 1.0], 0.2, 0.5, 1.0);		
 		this.lightSource.bindShaderAttributes(this.textureShader, 'lightPosition', 'lightColor', 'ambientFactor', 'diffuseFactor', 'specularFactor');
 	}
 	
