@@ -11,11 +11,11 @@ function GlMain(data) {
 
 	this.matrixStack = null;
 	this.camera = null;
+	
+	this.lightSource = null;
 
 	this.lightGeometry = null;
-	this._lightPosition = null;
-	this._currentLightPosition = null;
-	
+	this.lightPosition = null;	
 	this.objectGeometry = null;
 	this.cubeTexture = null;
 	
@@ -34,12 +34,16 @@ function GlMain(data) {
 		
 		this.initGl(canvas);
 		this.initShaders();
+
+		
 		this.initGeometry();
 		this.initTextures();
+		this.initMatrixStack();		
+		this.initCamera();
+
 		this.initLights();
 		
-	    this.matrixStack = new MatrixStack();
-		this.initCamera();
+
 
 	    this.startDrawLoop();	    
 	    this.startAnimationTimer();
@@ -52,34 +56,11 @@ function GlMain(data) {
 	}
 	
 	this.initShaders = function() {
-		this.createColorShader();
-		this.createTextureShader();
-	}
-	
-	this.createColorShader = function() {
-		this.colorShader = new Shader(this.gl);
+		this.colorShader = new Shader(this.gl, "colorShader");
 		this.colorShader.createShader(this.textData.colorVertexShader, this.textData.colorFragmentShader);
-			
-		this.colorShader.bindVertexAttribute('vertexPosition', 'vertexPositionAttribute');
-		this.colorShader.bindVertexAttribute('vertexColor', 'vertexColorAttribute');
-			
-		this.colorShader.bindUniformAttribute('modelViewMatrix', 'modelViewMatrixUniform');
-		this.colorShader.bindUniformAttribute('projectionMatrix', 'projectionMatrixUniform');
-	}
-	
-	this.createTextureShader = function() {
-		this.textureShader = new Shader(this.gl);
+		
+		this.textureShader = new Shader(this.gl, "textureShader");
 		this.textureShader.createShader(this.textData.textureVertexShader, this.textData.textureFragmentShader);
-		
-		this.textureShader.bindVertexAttribute('vertexPosition', 'vertexPositionAttribute');
-		this.textureShader.bindVertexAttribute('vertexTextureCoordinate', 'vertexTextureCoordinateAttribute');
-		this.textureShader.bindVertexAttribute('vertexNormal', 'vertexNormalAttribute');
-		
-		this.textureShader.bindUniformAttribute('modelViewMatrix', 'modelViewMatrixUniform');
-		this.textureShader.bindUniformAttribute('projectionMatrix', 'projectionMatrixUniform');
-		this.textureShader.bindUniformAttribute('normalMatrix', 'normalMatrixUniform');
-		this.textureShader.bindUniformAttribute('textureSampler', 'textureSamplerUniform');
-		this.textureShader.bindUniformAttribute('lightPosition', 'lightPositionUniform')
 	}
 	
 	this.initGeometry = function() {
@@ -91,31 +72,34 @@ function GlMain(data) {
 	        [ 1.0, 1.0, 1.0, 1.0 ],
 	        [ 1.0, 1.0, 1.0, 1.0 ]
 		]);
+		this.lightGeometry.bindShaderAttributes(this.colorShader, 'vertexPosition', null, 'vertexColor', null);
 		
-		this.lightGeometry.bindVertexPositionUniformHandle('vertexPositionAttribute');
-		this.lightGeometry.bindColorUniformHandle('vertexColorAttribute');
-		
-		//this.geometry2 = new TexturedCubeGeometry(this.gl, 1.0);
 		this.objectGeometry = new SphereGeometry(this.gl, 1.0, 40, 40);
-		
-		this.objectGeometry.bindVertexPositionUniformHandle('vertexPositionAttribute');
-		this.objectGeometry.bindTextureCoordinateUniformHandle(0, 'vertexTextureCoordinateAttribute');
-		this.objectGeometry.bindNormalUniformHandle('vertexNormalAttribute');
+		this.objectGeometry.bindShaderAttributes(this.textureShader, 'vertexPosition', 'vertexNormal', 'vertexColor', ['vertexTextureCoordinate']);
 	}
 	
 	this.initTextures = function() {
 		this.cubeTexture = new Texture(this.gl);
-		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR_MIPMAP_LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
+		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
+		this.cubeTexture.bindShaderAttributes(this.textureShader, 'textureSampler');
 	}
 	
-	this.initLights = function() {
-		this._lightPosition = vec3.create([1.0, 1.0, 1.0]);
-		this._currentLightPosition = vec3.create();
+	this.initMatrixStack = function() {
+	    this.matrixStack = new MatrixStack();
+	    this.matrixStack.bindShaderAttributes(this.colorShader, 'projectionMatrix', 'modelViewMatrix', null);
+	    this.matrixStack.bindShaderAttributes(this.textureShader, 'projectionMatrix', 'modelViewMatrix', 'normalMatrix');
 	}
 	
 	this.initCamera = function() {
 		this.camera = new UserMovedCamera(this.matrixStack.modelViewMatrix, 'webgl-canvas');
 		this.camera.bindUserInput();
+	}
+	
+	this.initLights = function() {
+		this.lightPosition = vec3.create([1.0, 1.0, 1.0]);
+		
+		this.lightSource = new LightSource(this.matrixStack.modelViewMatrix, [1.0, 1.0, 1.0], 0.1, 0.5, 1.0);		
+		this.lightSource.bindShaderAttributes(this.textureShader, 'lightPosition', 'lightColor', 'ambientFactor', 'diffuseFactor', 'specularFactor');
 	}
 	
 	this.startAnimationTimer = function() {
@@ -144,25 +128,25 @@ function GlMain(data) {
 		this.matrixStack.modelViewMatrix.pushMatrix();
 		
 			this.matrixStack.modelViewMatrix.translate(0.0, 0.0, -3.0);
-			
 
+			this.matrixStack.modelViewMatrix.pushMatrix();
+			
+				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 0.0, 1.0, 0.0);
+				this.matrixStack.modelViewMatrix.translate(this.lightPosition[0], this.lightPosition[1], this.lightPosition[2]);
+				
+				this.lightSource.saveCurrentLightPosition();
+				this.prepareColoredDraw();
+
+				this.lightGeometry.drawOnce(this.colorShader);
+			this.matrixStack.modelViewMatrix.popMatrix();
 			
 			this.matrixStack.modelViewMatrix.pushMatrix();
-				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 0.0, 1.0, 0.0);
-				this.matrixStack.modelViewMatrix.translate(this._lightPosition[0], this._lightPosition[1], this._lightPosition[2]);
-
-				
-				var modelViewMatrix = this.matrixStack.modelViewMatrix.getMatrix();
-				mat4.multiplyPoint3(modelViewMatrix, vec3.create(0.0, 0.0, 0.0), this._currentLightPosition);
-				
-				this.prepareColoredDraw();
-				this.lightGeometry.drawOnce(this.colorShader.getShaderProgram());				
-			this.matrixStack.modelViewMatrix.popMatrix();
-
-			this.matrixStack.modelViewMatrix.pushMatrix();	
-				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 1.0, 1.0, 1.0);
+			
+				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, -1.0, -1.0, -1.0);
+			
 				this.prepareTexturedDraw();		
-				this.objectGeometry.drawOnce(this.textureShader.getShaderProgram());	
+				this.objectGeometry.drawOnce(this.textureShader);
+				
 			this.matrixStack.modelViewMatrix.popMatrix();
 			
 		this.matrixStack.modelViewMatrix.popMatrix();
@@ -171,20 +155,18 @@ function GlMain(data) {
 	}
 	
 	this.prepareColoredDraw = function() {
-		this.colorShader.use();
-		this.colorShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.projectionMatrix.getMatrix());
-		this.colorShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.modelViewMatrix.getMatrix());
+		var shader = this.colorShader;
+		shader.use();
+		
+		this.matrixStack.setShaderAttributes(shader);
 	}
 	
 	this.prepareTexturedDraw = function() {
-		this.textureShader.use();
-		this.textureShader.setUniformMatrix4('projectionMatrixUniform', this.matrixStack.projectionMatrix.getMatrix());
-		this.textureShader.setUniformMatrix4('modelViewMatrixUniform', this.matrixStack.modelViewMatrix.getMatrix());
-		this.textureShader.setUniformMatrix3('normalMatrixUniform', this.matrixStack.modelViewMatrix.getNormalMatrix());
+		var shader = this.textureShader;
+		shader.use();
 		
-		this.textureShader.setUniform1i('textureSamplerUniform', 0);
-		this.textureShader.setUniform3f('lightPositionUniform', this._currentLightPosition[0], this._currentLightPosition[1], this._currentLightPosition[2])
-		
-		this.cubeTexture.use();
+		this.matrixStack.setShaderAttributes(shader);
+		this.lightSource.setShaderLightPosition(shader);
+		this.cubeTexture.use(shader, 0);
 	}	
 }

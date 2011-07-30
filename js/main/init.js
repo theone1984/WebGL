@@ -13,12 +13,14 @@ function Initializer() {
 	    '../js/gl/geometry/objects/texturedCubeGeometry.js',
 	    '../js/gl/geometry/objects/sphereGeometry.js',
 	    '../js/gl/texture/texture.js',
+	    '../js/gl/lights/lightSource.js',
 	    '../js/gl/matrix/modelViewMatrix.js',
 	    '../js/gl/camera/userMovedCamera.js',
 	    '../js/gl/matrix/projectionMatrix.js',
 	    '../js/gl/matrix/matrixStack.js',
+	    '../js/gl/shaders/shader.js',
+	    '../js/gl/shaders/shaderHandler.js',
 	    '../js/gl/glBase.js',
-	    '../js/gl/shader.js',
 	    '../js/main/glMain.js'
 	];
 	

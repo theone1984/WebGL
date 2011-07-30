@@ -1,6 +1,8 @@
 
-function Shader(glContext) {
-	this._glContext = glContext;
+function Shader(glContext, shaderName) {
+	this._glContext = null;
+	this.shaderName = "";
+	
 	this._shaderProgram = null;
 	
 	this.createShaderFromHtmlElements = function(vertexShaderId, fragmentShaderId) {
@@ -60,36 +62,77 @@ function Shader(glContext) {
 		return shader;
 	}
 	
-	this.bindVertexAttribute = function(shaderAttributeName, attributeHandle) {
-		this._shaderProgram[attributeHandle] = this._glContext.getAttribLocation(this._shaderProgram, shaderAttributeName);
-		this._glContext.enableVertexAttribArray(this._shaderProgram[attributeHandle]);
+	this.getVertexAttributeHandles = function(shaderAttributeNames) {
+		var attributeHandles = [];		
+		if (shaderAttributeNames == null)
+			shaderAttributeNames = [];
+		
+		for (var i = 0; i < shaderAttributeNames.length; i++)
+			attributeHandles[i] = this.getVertexAttributeHandle(shaderAttributeNames[i]);
+		
+		return attributeHandles;
+	}
+	
+	this.getVertexAttributeHandle = function(shaderAttributeName) {
+		if (shaderAttributeName == null)
+			return null;
+		
+		return this._glContext.getAttribLocation(this._shaderProgram, shaderAttributeName);
+	}
+	
+	this.getUniformHandles = function(shaderUniformNames) {
+		var uniformHandles = [];		
+		if (shaderUniformNames == null)
+			shaderUniformNames = [];
+		
+		for (var i = 0; i < shaderUniformNames.length; i++)
+			uniformHandles[i] = this.getUniformHandle(shaderUniformNames[i]);
+		
+		return uniformHandles;
+	}
+	
+	this.getUniformHandle = function(shaderUniformName) {
+		if (shaderUniformName == null)
+			return null;
+		
+		return this._glContext.getUniformLocation(this._shaderProgram, shaderUniformName);
 	}
 	
 	this.use = function() {
 		this._glContext.useProgram(this._shaderProgram);
 	}
 	
-	this.bindUniformAttribute = function(uniformAttributeName, attributeHandle) {
-		this._shaderProgram[attributeHandle] = this._glContext.getUniformLocation(this._shaderProgram, uniformAttributeName);
+	this.setUniformMatrix3 = function(uniformHandle, matrix) {
+		this._glContext.uniformMatrix3fv(uniformHandle, false, new Float32Array(matrix));
 	}
 	
-	this.setUniformMatrix3 = function(attributeHandle, matrix) {
-		this._glContext.uniformMatrix3fv(this._shaderProgram[attributeHandle], false, new Float32Array(matrix));
+	this.setUniformMatrix4 = function(uniformHandle, matrix) {
+		this._glContext.uniformMatrix4fv(uniformHandle, false, new Float32Array(matrix));
 	}
 	
-	this.setUniformMatrix4 = function(attributeHandle, matrix) {
-		this._glContext.uniformMatrix4fv(this._shaderProgram[attributeHandle], false, new Float32Array(matrix));
+	this.setUniform1i = function(uniformHandle, value) {
+		this._glContext.uniform1i(uniformHandle, value);
 	}
 	
-	this.setUniform1i = function(attributeHandle, value) {
-		this._glContext.uniform1i(this._shaderProgram[attributeHandle], value);
+	this.setUniform1f = function(uniformHandle, value) {
+		this._glContext.uniform1f(uniformHandle, value);
 	}
 	
-	this.setUniform3f = function(attributeHandle, x, y, z) {
-		this._glContext.uniform3f(this._shaderProgram[attributeHandle], x, y, z);
+	this.setUniform3f = function(uniformHandle, vector) {
+		this._glContext.uniform3fv(uniformHandle, vector);
 	}
 	
 	this.getShaderProgram = function() {
 		return this._shaderProgram;
+	}
+	
+	this.toString = function() {
+		return this.shaderName;
+	}
+	
+	// Constructor
+	{
+		this._glContext = glContext;
+		this.shaderName = shaderName;
 	}
 }

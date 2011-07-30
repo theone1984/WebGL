@@ -1,5 +1,7 @@
 
 this.Texture = function(glContext) {
+	ShaderHandler.apply(this, []);
+	
 	this._glContext = glContext;
 	this._textureHandle = null;
 	
@@ -17,6 +19,7 @@ this.Texture = function(glContext) {
 	    
 	    if (minificationFilterMode == gl.NEAREST_MIPMAP_NEAREST || minificationFilterMode == gl.LINEAR_MIPMAP_NEAREST ||
 	    	minificationFilterMode == gl.NEAREST_MIPMAP_LINEAR || minificationFilterMode == gl.LINEAR_MIPMAP_LINEAR) {
+	    	
 	    	gl.generateMipmap(gl.TEXTURE_2D);
 	    }
 	    
@@ -25,11 +28,29 @@ this.Texture = function(glContext) {
 	    this._textureHandle = textureHandle;
 	}
 	
-	this.use = function(textureLevel) {
+	this.bindShaderAttributes = function(shader, samplerUniform) {
+		this._addShaderHandles(shader, {
+			sampler: shader.getUniformHandle(samplerUniform)
+		});
+	}
+	
+	this.use = function(activeShader, textureLevel) {
+		var shaderHandles = this._getShaderHandles(activeShader);
+		
+		this._bindTexture(textureLevel)
+		this._setShaderAttributes(activeShader, shaderHandles, textureLevel);
+	}
+	
+	this._bindTexture = function(textureLevel) {
 		var gl = this._glContext;
 		var textureHandle = this._textureHandle;
 		
 		gl.activeTexture(gl.TEXTURE0 + textureLevel);
 	    gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+	}
+	
+	this._setShaderAttributes = function(shader, shaderHandles, textureLevel) {
+		if (shaderHandles.sampler != null)
+			shader.setUniform1i(shaderHandles.sampler, textureLevel);
 	}
 }

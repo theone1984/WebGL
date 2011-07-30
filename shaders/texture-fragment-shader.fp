@@ -4,6 +4,11 @@
 
 uniform sampler2D textureSampler;
 
+uniform vec3 lightColor;
+uniform float ambientFactor;
+uniform float diffueseFactor;
+uniform float specularFactor;
+
 varying vec2 textureCoordinate;
 varying vec3 normal;
 varying vec3 lightDirection;
@@ -35,5 +40,5 @@ void main(void) {
 
 	vec4 textureColor = texture2D(textureSampler, textureCoordinate);
 	
-	gl_FragColor = vec4(lightColor.rgb * textureColor.rgb, textureColor.a);	
+	gl_FragColor = vec4(lightColor.rgb * textureColor.rgb, textureColor.a);
 }
