@@ -18,8 +18,8 @@ function GlMain(data) {
 	this.lightPosition = null;	
 	this.objectGeometry = null;
 	
-	this.cubeTexture = null;
-	this.normalTexture = null;
+	this.objectTexture = null;
+	this.objectNormalTexture = null;
 	
 	this.currentRotation = 0;
 	
@@ -75,17 +75,17 @@ function GlMain(data) {
 		this.lightGeometry.bindShaderAttributes(this.colorShader, 'vertexPosition', null, null, 'vertexColor', null);
 		
 		this.objectGeometry = new SphereGeometry(this.gl, 1.0, 40, 40);
-		this.objectGeometry.bindShaderAttributes(this.textureShader, 'vertexPosition', 'vertexNormal', 'vertexTangent', 'vertexColor', ['vertexTextureCoordinate']);
+		this.objectGeometry.bindShaderAttributes(this.textureShader, 'vertexPosition_Object', 'vertexNormal_Object', 'vertexTangent_Object', 'vertexColor', ['vertexTextureCoordinate']);
 	}
 	
 	this.initTextures = function() {
-		this.cubeTexture = new Texture(this.gl);
-		this.cubeTexture.create2DTexture(this.imageData.boxTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
-		this.cubeTexture.bindShaderAttributes(this.textureShader, 'textureSampler');
+		this.objectTexture = new Texture(this.gl);
+		this.objectTexture.create2DTexture(this.imageData.brickTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
+		this.objectTexture.bindShaderAttributes(this.textureShader, 'textureSampler');
 		
-		this.normalTexture = new Texture(this.gl);
-		this.normalTexture.create2DTexture(this.imageData.normalTextureImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
-		this.normalTexture.bindShaderAttributes(this.textureShader, 'normalSampler');
+		this.objectNormalTexture = new Texture(this.gl);
+		this.objectNormalTexture.create2DTexture(this.imageData.brickNormalImage, this.gl.LINEAR, this.gl.LINEAR_MIPMAP_LINEAR);
+		this.objectNormalTexture.bindShaderAttributes(this.textureShader, 'normalSampler');
 	}
 	
 	this.initMatrixStack = function() {
@@ -102,8 +102,8 @@ function GlMain(data) {
 	this.initLights = function() {
 		this.lightPosition = vec3.create([1.0, 1.0, 1.0]);
 		
-		this.lightSource = new LightSource(this.matrixStack.modelViewMatrix, [1.0, 1.0, 1.0], 0.2, 0.5, 1.0);		
-		this.lightSource.bindShaderAttributes(this.textureShader, 'lightPosition', 'lightColor', 'ambientFactor', 'diffuseFactor', 'specularFactor');
+		this.lightSource = new LightSource(this.matrixStack.modelViewMatrix, [1.0, 1.0, 1.0], 0.2, 0.5, 0.3);		
+		this.lightSource.bindShaderAttributes(this.textureShader, 'lightPosition_World', 'lightColor', 'ambientFactor', 'diffuseFactor', 'specularFactor');
 	}
 	
 	this.startAnimationTimer = function() {
@@ -146,7 +146,7 @@ function GlMain(data) {
 			
 			this.matrixStack.modelViewMatrix.pushMatrix();
 			
-				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, -1.0, -1.0, -1.0);
+				this.matrixStack.modelViewMatrix.rotate(this.currentRotation, 1.0, -1.0, 1.0);
 			
 				this.prepareTexturedDraw();		
 				this.objectGeometry.drawOnce(this.textureShader);
@@ -171,7 +171,7 @@ function GlMain(data) {
 		
 		this.matrixStack.setShaderAttributes(shader);
 		this.lightSource.setShaderLightPosition(shader);
-		this.cubeTexture.use(shader, 0);
-		this.normalTexture.use(shader, 1);
+		this.objectTexture.use(shader, 0);
+		this.objectNormalTexture.use(shader, 1);
 	}	
 }

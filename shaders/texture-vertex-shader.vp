@@ -2,10 +2,11 @@
 	precision highp float;
 #endif
 
-attribute vec3 vertexPosition;
+attribute vec3 vertexPosition_Object;
+attribute vec3 vertexNormal_Object;
+attribute vec3 vertexTangent_Object;
+
 attribute vec3 vertexColor;
-attribute vec3 vertexNormal;
-attribute vec3 vertexTangent;
 attribute vec2 vertexTextureCoordinate;
 
 uniform mat4 modelViewMatrix;
@@ -13,19 +14,30 @@ uniform mat4 inverseModelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
 
-uniform vec3 lightPosition;
+uniform vec3 lightPosition_World;
 
 varying vec2 textureCoordinate;
-varying vec3 normal;
-varying vec3 lightDirection;
+varying vec3 normal_Object;
+varying vec3 tangent_Object;
+varying vec3 binormal_Object;
+varying vec3 lightDirection_Object;
 
 void main(void) {
-	gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition_Object, 1.0);
 	
-	vec4 lightPositionObject = inverseModelViewMatrix * vec4(lightPosition, 1.0);
-	vec3 correctedLightPosition = lightPositionObject.rgb / lightPositionObject.w;
+	vec4 lightPosition_Object_Vec4 = inverseModelViewMatrix * vec4(lightPosition_World, 1.0);
+	vec3 lightPosition_Object = lightPosition_Object_Vec4.xyz / lightPosition_Object_Vec4.w;
 	
-	normal = normalize(vertexNormal);
-	lightDirection = normalize(correctedLightPosition - vertexPosition);	
+	normal_Object = vertexNormal_Object;
+	tangent_Object = vertexTangent_Object;
+	binormal_Object = normalize(cross(vertexTangent_Object, vertexNormal_Object));
+	
+	lightDirection_Object = normalize(lightPosition_Object - vertexPosition_Object);
+	
+	//lightDirection_Tangent = objectToTangentMatrix * lightDirection_Object;	
+	//lightDirection_Tangent = normalize(lightDirection_Tangent);
+	
+	//lightDirection_Tangent = vec3(0.0, lightDirection_Tangent.z, 0.0);
+
 	textureCoordinate = vertexTextureCoordinate;
 }

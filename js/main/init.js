@@ -32,8 +32,8 @@ function Initializer() {
 	};
 	
 	this.imagesToLoad = {
-		'boxTextureImage':			'../img/box.jpg',
-		'normalTextureImage':		'../img/normal.jpg'
+		'brickTextureImage':		'../img/brick-texture.jpg',
+		'brickNormalImage':			'../img/brick-normals.jpg'
 	};
 	
 	this.start = function() {
