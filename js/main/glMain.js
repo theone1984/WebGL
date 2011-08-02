@@ -24,11 +24,15 @@ function GlMain(data) {
 	this.currentRotation = 0;
 	
 	this.animationTimer = null;
+	this.fpsCounter = null;
 	
 	// Constructor
 	{
 		this.textData = data.textData;
 		this.imageData = data.imageData;
+		
+		this.fpsCounter = new GraphicalFpsCounter('framecount-canvas', 3, 60);
+		this.fpsCounter.start();
 	}
 	
 	this.start = function() {
@@ -124,6 +128,8 @@ function GlMain(data) {
 	}
 	
 	this.drawScene = function() {
+		this.fpsCounter.increment();
+		
 		this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		

@@ -22,6 +22,18 @@ header {
 	margin-bottom: 30px;
 }
 
+#canvas-elements {
+	position: relative;	
+}
+
 #webgl-canvas {
 	border: none;	
+}
+
+#framecount-canvas {
+	position: absolute;
+	border: 1px solid White;
+	right: 0px;
+	top: 0px;
+
 }
